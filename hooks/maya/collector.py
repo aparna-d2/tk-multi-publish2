@@ -220,7 +220,7 @@ class MayaSessionCollector(HookBaseClass):
                 if not item:
                     continue
 
-				# Track the current work template being processed
+                # Track the current work template being processed
                 item.properties["work_path_template"] = work_template
 
                 # Add the item to the list
@@ -256,12 +256,21 @@ class MayaSessionCollector(HookBaseClass):
             # this template was not found in the template config!
             raise TankError("The Template '%s' does not exist!" % work_path_template)
 
-        # First get the fields from the context
-        try:
-            fields.update(parent_item.context.as_template_fields(work_tmpl))
-        except TankError as e:
-            self.logger.warning(
-                "Unable to get context fields for work_path_template.")
+        # context.as_template_fields() doesn't contain {name}, {version}
+        # so try to get those from scene file path
+        file_path = _session_path()
+        file_template = self.sgtk.template_from_path(file_path)
+        if file_template:
+            fields.update(file_template.get_fields(file_path))
+            fields.pop("extension")  # remove ma as extension to find all files
+        else:
+            self.logger.warning("Maya file name does not conform to any template.")
+            # get the fields from the context
+            try:
+                fields.update(parent_item.context.as_template_fields(work_tmpl))
+            except TankError as e:
+                self.logger.warning(
+                    "Unable to get context fields for work_path_template.")
 
         # Get the paths from the template using the known fields
         self.logger.info(
