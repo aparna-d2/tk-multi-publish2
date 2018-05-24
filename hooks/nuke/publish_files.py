@@ -198,11 +198,9 @@ class NukePublishFilesPlugin(HookBaseClass):
 
         super(NukePublishFilesPlugin, self).finalize(task_settings, item)
 
-        # only version up the file if the publish went through successfully.
-        if item.properties.get("sg_publish_data"):
-            # insert the path into the properties
-            if item.type == 'file.nuke':
-                item.properties["next_version_path"] = self._bump_file_version(path)
+        # insert the path into the properties
+        if item.type == 'file.nuke':
+            item.properties["next_version_path"] = self._bump_file_version(path)
 
 
     def _bump_file_version(self, path):
