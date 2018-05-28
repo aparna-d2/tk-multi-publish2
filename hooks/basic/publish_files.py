@@ -93,23 +93,21 @@ class PublishFilesPlugin(HookBaseClass):
     validating and registering publishes with Shotgun.
 
     Once attached to a publish item, the plugin will key off of properties that
-    are set on the item. These properties can be set via the collector or
-    by subclasses prior to calling methods on this class.
+    drive how the item is published.
 
-    The only property that is required for the plugin to operate is the ``path``
-    property. All of the properties and settings understood by the plugin are
-    documented below:
+    The ``path`` property, set on the item, is the only required property as it
+    informs the plugin where the file to publish lives on disk.
 
-        Item properties
-        -------------
+    The following properties can be set on the item via the collector or by
+    subclasses prior to calling methods on the base class::
 
-        path - The path to the file to be published.
+        ``path`` - The path to the file to be published.
 
-        sequence_paths - If set, implies the "path" property represents a
+        ``sequence_paths`` - If set, implies the "path" property represents a
             sequence of files (typically using a frame identifier such as %04d).
             This property should be a list of files on disk matching the "path".
 
-        is_sequence - A boolean defining whether or not this item is a sequence of files.
+        ``is_sequence`` - A boolean defining whether or not this item is a sequence of files.
 
         publish_dependencies - A list of files to include as dependencies when
             registering the publish. If the item's parent has been published,
@@ -130,8 +128,8 @@ class PublishFilesPlugin(HookBaseClass):
             determine where "path" should be copied prior to publishing. If
             not specified, "path" will be published in place.
 
-    This plugin will also set the following properties on the item which may be 
-    useful for child items.
+    The following properties can also be set by a subclass of this plugin via
+    :meth:`Item.properties` or :meth:`Item.local_properties`.
 
         publish_type - Shotgun PublishedFile instance type.
 
@@ -250,6 +248,9 @@ class PublishFilesPlugin(HookBaseClass):
         return schema
 
 
+    ############################################################################
+    # standard publish plugin methods
+
     def accept(self, task_settings, item):
         """
         Method called by the publisher to determine if an item is of any
@@ -268,6 +269,9 @@ class PublishFilesPlugin(HookBaseClass):
             - checked: If True, the plugin will be checked in the UI, otherwise
                 it will be unchecked. Optional, True by default.
 
+        :param task_settings: Dictionary of Settings. The keys are strings, matching
+            the keys returned in the settings property. The values are `Setting`
+            instances.
         :param item: Item to process
 
         :returns: dictionary with boolean keys accepted, required and enabled
@@ -301,7 +305,9 @@ class PublishFilesPlugin(HookBaseClass):
 
         Returns a boolean to indicate validity.
 
-        :param task_settings: Dictionary of settings
+        :param task_settings: Dictionary of Settings. The keys are strings, matching
+            the keys returned in the settings property. The values are `Setting`
+            instances.
         :param item: Item to process
 
         :returns: True if item is valid, False otherwise.
@@ -311,13 +317,13 @@ class PublishFilesPlugin(HookBaseClass):
 
         # ---- ensure that work file(s) exist on disk to be published
 
-        if item.properties["is_sequence"]:
-            if not item.properties["sequence_paths"]:
-                self.logger.warning("File sequence does not exist: %s" % item.properties["path"])
+        if item.properties.is_sequence:
+            if not item.properties.sequence_paths:
+                self.logger.warning("File sequence does not exist: %s" % item.properties.path)
                 return False
         else:
-            if not os.path.exists(item.properties["path"]):
-                self.logger.warning("File does not exist: %s" % item.properties["path"])
+            if not os.path.exists(item.properties.path):
+                self.logger.warning("File does not exist: %s" % item.properties.path)
                 return False
 
         # ---- validate the settings required to publish
@@ -348,8 +354,8 @@ class PublishFilesPlugin(HookBaseClass):
         # accurate list of previous publishes of this file.
         publishes = publisher.util.get_conflicting_publishes(
             item.context,
-            item.properties["publish_path"],
-            item.properties["publish_name"],
+            item.properties.publish_path,
+            item.properties.publish_name,
             filters=["sg_status_list", "is_not", None]
         )
 
@@ -374,8 +380,8 @@ class PublishFilesPlugin(HookBaseClass):
         # ---- ensure the published file(s) don't already exist on disk
 
         conflict_info = None
-        if item.properties["is_sequence"]:
-            seq_pattern = publisher.util.get_path_for_frame(item.properties["publish_path"], "*")
+        if item.properties.is_sequence:
+            seq_pattern = publisher.util.get_path_for_frame(item.properties.publish_path, "*")
             seq_files = [f for f in glob.iglob(seq_pattern) if os.path.isfile(f)]
 
             if seq_files:
@@ -384,16 +390,16 @@ class PublishFilesPlugin(HookBaseClass):
                     "<pre>%s</pre>" % (pprint.pformat(seq_files),)
                 )
         else:
-            if os.path.exists(item.properties["publish_path"]):
+            if os.path.exists(item.properties.publish_path):
                 conflict_info = (
                     "The following file already exists!<br>"
-                    "<pre>%s</pre>" % (item.properties["publish_path"],)
+                    "<pre>%s</pre>" % (item.properties.publish_path,)
                 )
 
         if conflict_info:
             self.logger.error(
                 "Version '%s' of this file already exists on disk." %
-                    (item.properties["publish_version"],),
+                    (item.properties.publish_version,),
                 extra={
                     "action_show_more_info": {
                         "label": "Show Conflicts",
@@ -411,10 +417,10 @@ class PublishFilesPlugin(HookBaseClass):
                 "action_show_more_info": {
                     "label": "Show Info",
                     "tooltip": "Show more info",
-                    "text": "Publish Name: %s" % (item.properties["publish_name"],) + "\n" +
-                            "Linked Entity Name: %s" % (item.properties["publish_linked_entity_name"],) + "\n" +
-                            "Publish Path: %s" % (item.properties["publish_path"],) + "\n" +
-                            "Publish Symlink Path: %s" % (item.properties["publish_symlink_path"],)
+                    "text": "Publish Name: %s" % (item.properties.publish_name,) + "\n" +
+                            "Linked Entity Name: %s" % (item.properties.publish_linked_entity_name,) + "\n" +
+                            "Publish Path: %s" % (item.properties.publish_path,) + "\n" +
+                            "Publish Symlink Path: %s" % (item.properties.publish_symlink_path,)
                 }
             }
         )
@@ -435,11 +441,11 @@ class PublishFilesPlugin(HookBaseClass):
         publisher = self.parent
 
         # Get item properties populated by validate method
-        publish_name          = item.properties["publish_name"]
-        publish_path          = item.properties["publish_path"]
-        publish_symlink_path  = item.properties["publish_symlink_path"]
-        publish_type          = item.properties["publish_type"]
-        publish_version       = item.properties["publish_version"]
+        publish_name          = item.properties.publish_name
+        publish_path          = item.properties.publish_path
+        publish_symlink_path  = item.properties.publish_symlink_path
+        publish_type          = item.properties.publish_type
+        publish_version       = item.properties.publish_version
 
         # handle copying of work to publish
         self._copy_files(publish_path, item)
@@ -461,8 +467,8 @@ class PublishFilesPlugin(HookBaseClass):
         sg_fields = {}
         additional_fields = task_settings.get("additional_publish_fields", {})
         for template_key, sg_field in additional_fields.iteritems():
-            if template_key in item.properties["fields"]:
-                sg_fields[sg_field] = item.properties["fields"][template_key]
+            if template_key in item.properties.fields:
+                sg_fields[sg_field] = item.properties.fields[template_key]
 
         # arguments for publish registration
         self.logger.info("Registering publish...")
@@ -496,7 +502,7 @@ class PublishFilesPlugin(HookBaseClass):
         # create the publish and stash it in the item properties for other
         # plugins to use.
         try:
-            item.properties["sg_publish_data"] = sgtk.util.register_publish(
+            item.properties.sg_publish_data = sgtk.util.register_publish(
                 **publish_data)
             self.logger.info("Publish registered!")
         except Exception as e:
@@ -574,7 +580,7 @@ class PublishFilesPlugin(HookBaseClass):
             publisher = self.parent
 
             # get the data for the publish that was just created in SG
-            publish_data = item.properties["sg_publish_data"]
+            publish_data = item.properties.sg_publish_data
 
             # ensure conflicting publishes have their status cleared
             publisher.util.clear_status_for_conflicting_publishes(
@@ -583,7 +589,7 @@ class PublishFilesPlugin(HookBaseClass):
             self.logger.info(
                 "Cleared the status of all previous, conflicting publishes")
 
-            path = item.properties["path"]
+            path = item.properties.path
             self.logger.info(
                 "Publish created for file: %s" % (path,),
                 extra={
@@ -666,7 +672,7 @@ class PublishFilesPlugin(HookBaseClass):
 
         # Otherwise fallback to publishing in place
         else:
-            publish_path = item.properties["path"]
+            publish_path = item.properties.path
             self.logger.debug(
                 "No publish_path_template defined. Publishing in place.")
 
@@ -735,7 +741,7 @@ class PublishFilesPlugin(HookBaseClass):
         """
 
         # Get the publish version from the item's fields
-        return item.properties["fields"].get("version", 1)
+        return item.properties.fields.get("version", 1)
 
 
     def _get_publish_name(self, item, task_settings):
@@ -785,7 +791,7 @@ class PublishFilesPlugin(HookBaseClass):
         # Otherwise fallback on file path parsing
         else:
             # Use built-in method for determining publish_name
-            publish_name = publisher.util.get_publish_name(item.properties["path"])
+            publish_name = publisher.util.get_publish_name(item.properties.path)
             self.logger.debug(
                 "Retrieved publish_name via source file path.")
 

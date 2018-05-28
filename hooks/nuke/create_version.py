@@ -30,7 +30,7 @@ class NukeCreateVersionPlugin(HookBaseClass):
         :param node:    The nuke node to find the colorspace for
         :returns:       The string representing the colorspace for the node
         """
-        node = item.properties["node"]
+        node = item.properties.node
 
         cs_knob = node.knob("colorspace")
         if not cs_knob:

@@ -193,12 +193,12 @@ class CreateVersionPlugin(HookBaseClass):
 
         # ---- ensure that work file(s) exist on disk
 
-        if item.properties["is_sequence"]:
-            if not item.properties["sequence_paths"]:
+        if item.properties.is_sequence:
+            if not item.properties.sequence_paths:
                 self.logger.warning("File sequence does not exist for item: %s" % item.name)
                 return False
         else:
-            if not os.path.exists(item.properties["path"]):
+            if not os.path.exists(item.properties.path):
                 self.logger.warning("File does not exist for item: %s" % item.name)
                 return False
 
@@ -217,13 +217,13 @@ class CreateVersionPlugin(HookBaseClass):
 
         sg_publish_data = []
         if "sg_publish_data" in item.properties:
-            sg_publish_data.append(item.properties["sg_publish_data"])
+            sg_publish_data.append(item.properties.sg_publish_data)
 
         colorspace = self._get_colorspace(task_settings, item)
         first_frame, last_frame = self._get_frame_range(task_settings, item)
 
         # First copy the item's fields
-        fields = copy.copy(item.properties["fields"])
+        fields = copy.copy(item.properties.fields)
 
         # Update with the fields from the context
         fields.update(item.context.as_template_fields())
@@ -232,7 +232,7 @@ class CreateVersionPlugin(HookBaseClass):
         self.__review_submission_app.change_context(item.context)
 
         sg_version = self.__review_submission_app.render_and_submit_path(
-            item.properties["path"],
+            item.properties.path,
             fields,
             first_frame,
             last_frame,
@@ -245,7 +245,7 @@ class CreateVersionPlugin(HookBaseClass):
         )
 
         # stash the version info in the item just in case
-        item.properties["sg_version_data"] = sg_version
+        item.properties.sg_version_data = sg_version
 
         self.logger.info("Version Creation complete!")
 
@@ -260,7 +260,7 @@ class CreateVersionPlugin(HookBaseClass):
             instances.
         :param item: Item to process
         """
-        version = item.properties["sg_version_data"]
+        version = item.properties.sg_version_data
 
         self.logger.info(
             "Version created for item: %s" % (item.name,),
@@ -291,9 +291,9 @@ class CreateVersionPlugin(HookBaseClass):
         publisher = self.parent
 
         # Determine if this is a sequence of paths
-        if item.properties["is_sequence"]:
-            first_frame = int(publisher.util.get_frame_number(item.properties["sequence_paths"][0]))
-            last_frame = int(publisher.util.get_frame_number(item.properties["sequence_paths"][-1]))
+        if item.properties.is_sequence:
+            first_frame = int(publisher.util.get_frame_number(item.properties.sequence_paths[0]))
+            last_frame = int(publisher.util.get_frame_number(item.properties.sequence_paths[-1]))
         else:
             first_frame = last_frame = 0
 

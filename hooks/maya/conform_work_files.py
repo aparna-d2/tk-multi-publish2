@@ -61,7 +61,7 @@ class NukeConformWorkFilesPlugin(HookBaseClass):
         """
 
         if item.type == "file.nuke":
-            if not item.properties["path"]:
+            if not item.properties.path:
                 # the session has not been saved before (no path determined).
                 # provide a save button. the session will need to be saved before
                 # validation will succeed.
@@ -106,15 +106,15 @@ class NukeConformWorkFilesPlugin(HookBaseClass):
         if item.type == "file.nuke":
 
             # Get work_path_template from the item
-            work_file_path = item.properties["work_file_path"]
-            if item.properties["path"] == work_file_path:
+            work_file_path = item.properties.work_file_path
+            if item.properties.path == work_file_path:
                 self.logger.info("Work file(s) already conformed. Skipping")
                 return
 
             _save_session(work_file_path)
             
             # Update path attr to reflect new location
-            item.properties["path"] = work_file_path
+            item.properties.path = work_file_path
 
             self.logger.info("Work file(s) for item '%s' copied succesfully!" % item.name)
 
@@ -138,7 +138,7 @@ class NukeConformWorkFilesPlugin(HookBaseClass):
         node = item.properties.get("node")
         if node and node.Class() in _NUKE_OUTPUTS:
             param_name = _NUKE_OUTPUTS[node.Class()]
-            node.knob(param_name).setValue(item.properties["work_file_path"])
+            node.knob(param_name).setValue(item.properties.work_file_path)
 
 
     ############################################################################

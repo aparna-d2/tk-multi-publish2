@@ -8,7 +8,7 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
-
+import sys
 import sgtk
 from collections import defaultdict
 from sgtk.platform.qt import QtCore, QtGui
@@ -65,6 +65,15 @@ class PublishTreeWidget(QtGui.QTreeWidget):
 
         # forward double clicks on items to the items themselves
         self.itemDoubleClicked.connect(lambda i, c: i.double_clicked(c))
+        
+        # workaround to make the scrollbar work properly for QT versions < 5 on macOS
+        # This look like a bug tracked on the QT side
+        # ( https://bugreports.qt.io/browse/QTBUG-27043 )
+        # ( https://stackoverflow.com/questions/15331256/qlistwidget-with-custom-widget-does-not-scroll-properly-in-mac-os )
+        if QtCore.__version__.startswith("4.") and sys.platform == "darwin":
+            self.verticalScrollBar().actionTriggered.connect(self.updateEditorGeometries)
+            self.verticalScrollBar().sliderMoved.connect(self.updateEditorGeometries)
+            self.verticalScrollBar().rangeChanged.connect(self.updateEditorGeometries)
 
     def set_plugin_manager(self, plugin_manager):
         """
@@ -106,8 +115,12 @@ class PublishTreeWidget(QtGui.QTreeWidget):
 
         # create children
         for task in item.tasks:
-            task = TreeNodeTask(task, ui_item)
-            self.__created_items.append(task)
+            ui_task = TreeNodeTask(task, ui_item)
+            self.__created_items.append(ui_task)
+
+        # ensure the expand indicator is shown/hidden depending on child
+        # visibility
+        ui_item.update_expand_indicator()
 
         for child in item.children:
             self._build_item_tree_r(child, enabled, level+1, ui_item)
@@ -482,6 +495,7 @@ class PublishTreeWidget(QtGui.QTreeWidget):
             # bubble up all events that aren't drag select related
             super(PublishTreeWidget, self).mouseMoveEvent(event)
 
+
 def _init_item_r(parent_item):
 
     # qt seems to drop the associated widget
@@ -491,9 +505,16 @@ def _init_item_r(parent_item):
     # the internal widget as part of re-inserting the node into the tree.
     parent_item.build_internal_widget()
 
+    # ensure the expand indicator is shown/hidden depending on child visibility
+    if isinstance(parent_item, TreeNodeItem):
+        parent_item.update_expand_indicator()
+
     # do this for all children of the supplied item recursively
     for child_index in xrange(parent_item.childCount()):
         child = parent_item.child(child_index)
+        if isinstance(child, TreeNodeTask):
+            # maintain visibility setting after re-init (usually drop)
+            child.setHidden(not child.task.visible)
         child.setExpanded(True)
         _init_item_r(child)
 

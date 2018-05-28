@@ -169,7 +169,7 @@ class UploadVersionPlugin(HookBaseClass):
         """
 
         publisher = self.parent
-        path = item.properties["path"]
+        path = item.properties.path
 
         # allow the publish name to be supplied via the task_settings. this is
         # useful for collectors that have access to templates and can determine
@@ -196,7 +196,7 @@ class UploadVersionPlugin(HookBaseClass):
         }
 
         if "sg_publish_data" in item.properties:
-            publish_data = item.properties["sg_publish_data"]
+            publish_data = item.properties.sg_publish_data
             version_data["published_files"] = [publish_data]
 
         if task_settings["Link Local File"].value:
@@ -219,7 +219,7 @@ class UploadVersionPlugin(HookBaseClass):
         self.logger.info("Version created!")
 
         # stash the version info in the item just in case
-        item.properties["sg_version_data"] = version
+        item.properties.sg_version_data = version
 
         thumb = item.get_thumbnail_as_path()
 
@@ -262,8 +262,8 @@ class UploadVersionPlugin(HookBaseClass):
         :param item: Item to process
         """
 
-        path = item.properties["path"]
-        version = item.properties["sg_version_data"]
+        path = item.properties.path
+        version = item.properties.sg_version_data
 
         self.logger.info(
             "Version uploaded for file: %s" % (path,),

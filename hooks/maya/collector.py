@@ -128,7 +128,7 @@ class MayaSessionCollector(HookBaseClass):
         # discover the project root which helps in discovery of other
         # publishable items
         project_root = cmds.workspace(q=True, rootDirectory=True)
-        session_item.properties["project_root"] = project_root
+        session_item.properties.project_root = project_root
 
         return session_item
 
@@ -173,7 +173,7 @@ class MayaSessionCollector(HookBaseClass):
                 item.name = "Render Layer (%s)" % (layer,)
 
                 # Store the layer as the item node
-                item.properties["node"] = layer
+                item.properties.node = layer
 
                 # Add the item to the list
                 items.append(item)
@@ -226,7 +226,7 @@ class MayaSessionCollector(HookBaseClass):
                     continue
 
 				# Track the current work template being processed
-                item.properties["work_path_template"] = work_template
+                item.properties.work_path_template = work_template
 
                 # Add the item to the list
                 items.append(item)
@@ -295,7 +295,7 @@ class MayaSessionCollector(HookBaseClass):
             # Get work_path_template from the workfiles app for the item's context
             # Note: this needs to happen here instead of during item initialization
             # since the path may change if the context changes
-            item.properties["work_path_template"] = \
+            item.properties.work_path_template = \
                 self.__workfiles_app.get_work_template(item.context).name
 
         # Now run the parent resolve method

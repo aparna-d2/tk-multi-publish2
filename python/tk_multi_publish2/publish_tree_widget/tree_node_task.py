@@ -34,6 +34,9 @@ class TreeNodeTask(TreeNodeBase):
         # tasks cannot be dragged or dropped on
         self.setFlags(self.flags() | QtCore.Qt.ItemIsSelectable)
 
+        # hide the plugin in the tree if the task is set to hidden
+        self.setHidden(not self._task.visible)
+
         # set up defaults based on task settings
         self.set_check_state(QtCore.Qt.Checked)
         self.set_check_enabled(self._task.enabled)

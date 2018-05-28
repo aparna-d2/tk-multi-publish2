@@ -177,13 +177,13 @@ class ConformWorkFilesPlugin(HookBaseClass):
 
         :returns: True if item is valid, False otherwise.
         """
-        path = item.properties["path"]
+        path = item.properties.path
         publisher = self.parent
 
         # ---- ensure that input work file(s) exist on disk to be copied
 
-        if item.properties["is_sequence"]:
-            if not item.properties["sequence_paths"]:
+        if item.properties.is_sequence:
+            if not item.properties.sequence_paths:
                 self.logger.warning("File sequence does not exist for item: %s" % item.name)
                 return False
         else:
@@ -213,14 +213,14 @@ class ConformWorkFilesPlugin(HookBaseClass):
 
         # ---- check if the path is already conformed
 
-        work_file_path = item.properties["work_file_path"]
+        work_file_path = item.properties.work_file_path
         if path == work_file_path:
             return True
 
         # ---- ensure the destination work file(s) don't already exist on disk
 
         conflict_info = None
-        if item.properties["is_sequence"]:
+        if item.properties.is_sequence:
             seq_pattern = publisher.util.get_path_for_frame(work_file_path, "*")
             seq_files = [f for f in glob.iglob(seq_pattern) if os.path.isfile(f)]
 
@@ -278,8 +278,8 @@ class ConformWorkFilesPlugin(HookBaseClass):
         publisher = self.parent
 
         # Skip publish if the work_file_path matches the input path
-        work_file_path = item.properties["work_file_path"]
-        if item.properties["path"] == work_file_path:
+        work_file_path = item.properties.work_file_path
+        if item.properties.path == work_file_path:
             self.logger.info("Work file(s) already conformed. Skipping")
             return
 
@@ -287,11 +287,11 @@ class ConformWorkFilesPlugin(HookBaseClass):
         processed_files = self._copy_files(work_file_path, item)
 
         # Update path attrs to reflect new location
-        if item.properties["is_sequence"]:
-            item.properties["path"] = publisher.util.get_frame_sequence_path(processed_files[0])
-            item.properties["sequence_paths"] = processed_files
+        if item.properties.is_sequence:
+            item.properties.path = publisher.util.get_frame_sequence_path(processed_files[0])
+            item.properties.sequence_paths = processed_files
         else:
-            item.properties["path"] = processed_files[0]
+            item.properties.path = processed_files[0]
 
         self.logger.info("Work file(s) for item '%s' copied succesfully!" % item.name)
 
@@ -319,7 +319,7 @@ class ConformWorkFilesPlugin(HookBaseClass):
         is not defined or the template and the path match, we do not accept. If the
         path and the template do not match, then we accept the plugin.
         """
-        path = item.properties["path"]
+        path = item.properties.path
         publisher = self.parent
 
         if not work_path_template:
@@ -355,7 +355,7 @@ class ConformWorkFilesPlugin(HookBaseClass):
         work_path_template = task_settings.get("work_path_template")
         if not work_path_template:
             self.logger.info("work_path_template not defined. Skipping conform.")
-            return item.properties["path"]
+            return item.properties.path
 
         work_tmpl = publisher.get_template_by_name(work_path_template)
         if not work_tmpl:
@@ -411,10 +411,10 @@ class ConformWorkFilesPlugin(HookBaseClass):
         Intended to be overridden by DCC-specific subclasses.
         """
         publisher = self.parent
-        if item.properties["is_sequence"]:
-            path = item.properties["sequence_paths"][0]
+        if item.properties.is_sequence:
+            path = item.properties.sequence_paths[0]
         else:
-            path = item.properties["path"]
+            path = item.properties.path
 
         fields = {}
 

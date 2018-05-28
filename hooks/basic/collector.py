@@ -113,6 +113,43 @@ class FileCollectorPlugin(HookBaseClass):
     """
 
     @property
+    def common_file_info(self):
+        """
+        A dictionary of file type info that allows the basic collector to
+        identify common production file types and associate them with a display
+        name, item type, and config icon.
+
+        The dictionary returned is of the form::
+
+            {
+                <Publish Type>: {
+                    "extensions": [<ext>, <ext>, ...],
+                    "icon": <icon path>,
+                    "item_type": <item type>
+                },
+                <Publish Type>: {
+                    "extensions": [<ext>, <ext>, ...],
+                    "icon": <icon path>,
+                    "item_type": <item type>
+                },
+                ...
+            }
+
+        See the collector source to see the default values returned.
+
+        Subclasses can override this property, get the default values via
+        ``super``, then update the dictionary as necessary by
+        adding/removing/modifying values.
+        """
+
+        if not hasattr(self, "_common_file_info"):
+
+            # do this once to avoid unnecessary processing
+            self._common_file_info = DEFAULT_ITEM_TYPES
+
+        return self._common_file_info
+
+    @property
     def settings_schema(self):
         """
         Dictionary defining the settings that this collector expects to receive
@@ -132,7 +169,7 @@ class FileCollectorPlugin(HookBaseClass):
         part of its environment configuration.
         """
         schema = super(FileCollectorPlugin, self).settings_schema
-        schema["Item Types"]["default_value"] = DEFAULT_ITEM_TYPES
+        schema["Item Types"]["default_value"] = self.common_file_info
         schema["Item Types"]["values"]["items"] = {
             "extensions": {
                 "type": "list",
@@ -206,15 +243,15 @@ class FileCollectorPlugin(HookBaseClass):
         :param item: The Item instance
         """
 
-        path = item.properties["path"]
-        is_sequence = item.properties["is_sequence"]
+        path = item.properties.path
+        is_sequence = item.properties.is_sequence
 
         item_info = self._get_item_info(settings, path, is_sequence)
 
-        item.properties["work_path_template"] = self._resolve_work_path_template(item_info, path)
+        item.properties.work_path_template = self._resolve_work_path_template(item_info, path)
 
         # Set the item's fields property
-        item.properties["fields"] = self._resolve_item_fields(item)
+        item.properties.fields = self._resolve_item_fields(item)
 
 
     def _resolve_work_path_template(self, properties, path):
@@ -613,7 +650,7 @@ class FileCollectorPlugin(HookBaseClass):
             return None
 
         if "fields" in item.properties:
-            name_field = item.properties["fields"].get("name")
+            name_field = item.properties.fields.get("name")
             if name_field:
                 return name_field
 
@@ -670,10 +707,10 @@ class FileCollectorPlugin(HookBaseClass):
         Intended to be overridden by DCC-specific subclasses.
         """
         publisher = self.parent
-        if item.properties["is_sequence"]:
-            path = item.properties["sequence_paths"][0]
+        if item.properties.is_sequence:
+            path = item.properties.sequence_paths[0]
         else:
-            path = item.properties["path"]
+            path = item.properties.path
 
         fields = {}
 
@@ -719,7 +756,7 @@ class FileCollectorPlugin(HookBaseClass):
             fields["extension"] = file_info["extension"]
 
         # Force use of %d format
-        if item.properties["is_sequence"]:
+        if item.properties.is_sequence:
             fields["SEQ"] = "FORMAT: %d"
 
         # use %V - full view printout as default for the eye field

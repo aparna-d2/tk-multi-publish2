@@ -142,7 +142,7 @@ class NukeSessionCollector(HookBaseClass):
 
             # add the project object to the properties so that the publish
             # plugins know which open project to associate with this item
-            session_item.properties["project"] = project
+            session_item.properties.project = project
 
             self.logger.info(
                 "Collected Nuke Studio project: %s" % (project.name(),))
@@ -224,7 +224,7 @@ class NukeSessionCollector(HookBaseClass):
                     item.name = "%s (%s)" % (node.Class(), node.name())
 
                     # Store a reference to the originating node
-                    item.properties["node"] = node
+                    item.properties.node = node
 
                     if thumbnail:
                         item.set_thumbnail_from_path(thumbnail)
@@ -244,7 +244,7 @@ class NukeSessionCollector(HookBaseClass):
         if node and node.Class() == "WriteTank":
             if self.__write_node_app:
                 # Get work_path_template from the write_node app and update fields
-                item.properties["work_path_template"] = \
+                item.properties.work_path_template = \
                     self.__write_node_app.get_node_render_template(node).name
             else:
                 self.logger.error("Unable to process item '%s' without "
@@ -255,7 +255,7 @@ class NukeSessionCollector(HookBaseClass):
             # Get work_path_template from the workfiles app for the item's context
             # Note: this needs to happen here instead of during item initialization
             # since the path may change if the context changes
-            item.properties["work_path_template"] = \
+            item.properties.work_path_template = \
                 self.__workfiles_app.get_work_template(item.context).name
 
         # Now run the parent resolve method

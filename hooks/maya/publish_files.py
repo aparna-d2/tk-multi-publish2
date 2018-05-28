@@ -56,7 +56,7 @@ class MayaPublishFilesPlugin(HookBaseClass):
         :returns: True if item is valid, False otherwise.
         """
         publisher = self.parent
-        path = item.properties["path"]
+        path = item.properties.path
 
         if item.type == 'file.maya':
 
@@ -99,14 +99,14 @@ class MayaPublishFilesPlugin(HookBaseClass):
             instances.
         :param item: Item to process
         """
-        path = item.properties["path"]
+        path = item.properties.path
 
         # ensure the session is saved
         if item.type == 'file.maya':
             _save_session(sgtk.util.ShotgunPath.normalize(path))
 
             # Store any file dependencies
-            item.properties["publish_dependencies"] = _get_scene_dependencies()
+            item.properties.publish_dependencies = _get_scene_dependencies()
 
         super(MayaPublishFilesPlugin, self).publish(task_settings, item)
 
@@ -121,7 +121,7 @@ class MayaPublishFilesPlugin(HookBaseClass):
             instances.
         :param item: Item to process
         """
-        path = item.properties["path"]
+        path = item.properties.path
 
         super(MayaPublishFilesPlugin, self).finalize(task_settings, item)
 
@@ -129,7 +129,7 @@ class MayaPublishFilesPlugin(HookBaseClass):
         if item.properties.get("sg_publish_data"):
             # insert the path into the properties
             if item.type == 'file.maya':
-                item.properties["next_version_path"] = self._bump_file_version(path)
+                item.properties.next_version_path = self._bump_file_version(path)
 
 
     def _bump_file_version(self, path):

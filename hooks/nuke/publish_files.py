@@ -113,7 +113,7 @@ class NukePublishFilesPlugin(HookBaseClass):
         :returns: True if item is valid, False otherwise.
         """
         publisher = self.parent
-        path = item.properties["path"]
+        path = item.properties.path
 
         if item.type == 'file.nuke':
 
@@ -168,18 +168,18 @@ class NukePublishFilesPlugin(HookBaseClass):
             instances.
         :param item: Item to process
         """
-        path = item.properties["path"]
+        path = item.properties.path
 
         # ensure the session is saved
         if item.type == 'file.nuke':
             _save_session(sgtk.util.ShotgunPath.normalize(path))
 
             # Store any file dependencies
-            item.properties["publish_dependencies"] = self._get_publish_dependencies()
+            item.properties.publish_dependencies = self._get_publish_dependencies()
 
         elif "node" in item.properties:
             # Store any node dependencies
-            item.properties["publish_dependencies"] = self._get_publish_dependencies(item.properties["node"])
+            item.properties.publish_dependencies = self._get_publish_dependencies(item.properties.node)
 
         super(NukePublishFilesPlugin, self).publish(task_settings, item)
 
@@ -194,7 +194,7 @@ class NukePublishFilesPlugin(HookBaseClass):
             instances.
         :param item: Item to process
         """
-        path = item.properties["path"]
+        path = item.properties.path
 
         super(NukePublishFilesPlugin, self).finalize(task_settings, item)
 
