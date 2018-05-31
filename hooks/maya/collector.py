@@ -208,6 +208,7 @@ class MayaSessionCollector(HookBaseClass):
         )
 
         geo_item.set_icon_from_path(icon_path)
+        geo_item.properties["fields"].update({"extension": "abc"})
 
         self.logger.info("Collected item: Maya Session Geometry")
         return [geo_item]
